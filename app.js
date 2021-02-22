@@ -4,6 +4,7 @@ const express = require('express')
 const app = express()
 
 const OAuthClient = require('intuit-oauth')
+const QuickBooks = require('node-quickbooks')
 
 const oauthClient = new OAuthClient({
     clientId: process.env.CLIENT_ID,
@@ -82,6 +83,29 @@ app.get('/info', (req, res) => {
             res.send(e.message)
 
         })
+
+})
+
+app.get('/info2', (req, res) => {
+
+    const token = oauthClient.getToken()
+
+    const qbo = new QuickBooks(
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        token.access_token,
+        false, // no token secret for oAuth 2.0
+        token.realmId,
+        true, // use the sandbox?
+        true, // enable debugging?
+        null, // set minorversion, or null for the latest version
+        '2.0', //oAuth version
+        token.refresh_token)
+
+    qbo.getCompanyInfo(token.realmId, (err, data) => {
+        if (err) res.send(err)
+        else res.send(data)
+    })
 
 })
 
